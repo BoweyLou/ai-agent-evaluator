@@ -17,7 +17,7 @@ services:
       - NODE_ENV=production
     volumes: []  # Remove development volumes
     restart: unless-stopped
-    command: npm run build && npm run serve
+    # Command is handled by Dockerfile based on NODE_ENV
 
   db:
     restart: unless-stopped
