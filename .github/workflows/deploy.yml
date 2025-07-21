@@ -1,0 +1,141 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install API dependencies
+        run: |
+          cd api
+          pip install -r requirements.txt
+      
+      - name: Run API tests
+        run: |
+          cd api
+          python -m pytest tests/ -v
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+      
+      - name: Install Web dependencies
+        run: |
+          cd web
+          npm ci
+      
+      - name: Run Web tests
+        run: |
+          cd web
+          npm test -- --coverage --watchAll=false
+      
+      - name: Run linting
+        run: |
+          cd api && python -m flake8 src/ || echo "No flake8 config"
+          cd ../web && npm run lint || echo "No lint script"
+      
+      - name: Security audit
+        run: |
+          cd web && npm audit --audit-level moderate
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    outputs:
+      api-image: ${{ steps.meta-api.outputs.tags }}
+      web-image: ${{ steps.meta-web.outputs.tags }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract API metadata
+        id: meta-api
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+      
+      - name: Extract Web metadata
+        id: meta-web
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+      
+      - name: Build and push API
+        uses: docker/build-push-action@v5
+        with:
+          context: ./api
+          push: true
+          tags: ${{ steps.meta-api.outputs.tags }}
+          labels: ${{ steps.meta-api.outputs.labels }}
+      
+      - name: Build and push Web
+        uses: docker/build-push-action@v5
+        with:
+          context: ./web
+          push: true
+          tags: ${{ steps.meta-web.outputs.tags }}
+          labels: ${{ steps.meta-web.outputs.labels }}
+
+  deploy-staging:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    environment: staging
+    steps:
+      - name: Deploy to Coolify Staging
+        run: |
+          curl -X POST "${{ secrets.COOLIFY_WEBHOOK_STAGING }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "api_image": "${{ needs.build.outputs.api-image }}",
+              "web_image": "${{ needs.build.outputs.web-image }}"
+            }'
+
+  deploy-production:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - name: Deploy to Coolify Production
+        run: |
+          curl -X POST "${{ secrets.COOLIFY_WEBHOOK_PRODUCTION }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "api_image": "${{ needs.build.outputs.api-image }}",
+              "web_image": "${{ needs.build.outputs.web-image }}"
+            }'

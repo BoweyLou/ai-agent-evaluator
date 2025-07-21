@@ -1,0 +1,78 @@
+task:
+  id: css-consolidation
+  name: "CSS Consolidation Challenge"
+  description: "Consolidate repetitive inline styles into CSS classes while preserving data-driven styling"
+  category: refactoring
+
+evaluation:
+  type: hybrid  # Can be: rule_based, ai_judge, hybrid
+  scoring:
+    pattern_consolidation:
+      weight: 40
+      description: "How well repetitive patterns are consolidated"
+    ie_hack_removal:
+      weight: 20
+      description: "Complete removal of IE-specific hacks"
+    font_tag_modernization:
+      weight: 15
+      description: "Conversion of <font> tags to CSS"
+    style_block_cleanup:
+      weight: 15
+      description: "Moving <style> blocks to external CSS"
+    smart_retention:
+      weight: 10
+      description: "Appropriate retention of data-driven styles"
+
+ai_judge:
+  model: "anthropic/claude-3-sonnet"
+  prompt_template: |
+    Focus on evaluating:
+    1. How well the agent identified repetitive patterns vs legitimate inline styles
+    2. Code quality and CSS best practices
+    3. Preservation of functionality (especially for financial data colors)
+    4. Performance implications of the solution
+    5. Overall maintainability of the result
+
+agents:
+  claude: |
+    Consolidate repetitive inline styles into CSS classes.
+    IMPORTANT: Keep data-driven colors inline (red for negative amounts, green for positive).
+    Modernize all <font> tags to CSS.
+    Remove IE-specific hacks (filter:, zoom:, *, _).
+    Move <style> blocks to external stylesheets.
+    
+  cursor: |
+    Refactor this legacy HTML to use modern CSS classes.
+    CRITICAL: Preserve inline styles for financial data colors - these are data-driven.
+    Replace deprecated <font> tags and remove browser hacks.
+    Focus on maintainability and performance.
+    
+  qdev: |
+    Modernize HTML: consolidate inline styles to CSS classes,
+    preserve financial data colors, remove font tags and IE hacks.
+    Create clean, maintainable CSS structure.
+    
+  gemini: |
+    Convert inline styles to CSS classes. Keep data-driven styling
+    for amounts (red negatives, green positives). Remove legacy elements.
+    Ensure the result is clean and follows CSS best practices.
+    
+  copilot: |
+    Clean up this legacy code by consolidating repetitive styles.
+    Be smart about preserving dynamic styles for financial data.
+    Remove deprecated elements and browser-specific hacks.
+    
+  manual: |
+    Create the ideal CSS consolidation manually as a reference.
+    This will serve as the gold standard for comparison.
+
+workspace:
+  reset_on_start: true
+  preserve_git: false
+  
+validation:
+  required_files:
+    - "*.html"
+  optional_files:
+    - "*.css"
+  max_size_mb: 10
