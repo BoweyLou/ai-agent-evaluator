@@ -47,7 +47,7 @@ class Evaluation(Base):
     status = Column(String(50), default="pending")  # pending, active, completed, failed
     agent_status = Column(JSON, default=dict)  # {agent: status}
     results = Column(JSON, default=dict)  # {agent: results}
-    metadata = Column(JSON, default=dict)
+    evaluation_metadata = Column(JSON, default=dict)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

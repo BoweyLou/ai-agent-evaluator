@@ -41,7 +41,7 @@ async def create_evaluation(
         agents=evaluation_data.agents,
         status=EvaluationStatus.PENDING,
         agent_status={agent: AgentStatus.PENDING for agent in evaluation_data.agents},
-        metadata={
+        evaluation_metadata={
             "created_by": "web_interface",
             "agent_count": len(evaluation_data.agents)
         }
@@ -131,7 +131,7 @@ async def get_evaluation(evaluation_id: str, db: AsyncSession = Depends(get_db))
         created_at=evaluation.created_at,
         updated_at=evaluation.updated_at,
         results=results_dict,
-        metadata=evaluation.metadata or {}
+        metadata=evaluation.evaluation_metadata or {}
     )
 
 
