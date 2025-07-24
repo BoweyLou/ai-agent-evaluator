@@ -20,6 +20,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application code
 COPY . .
 
+# Set Python path to include current directory
+ENV PYTHONPATH=/app
+
 # Create non-root user (fix group name)
 RUN addgroup --gid 1001 --system appgroup && \
     adduser --no-create-home --shell /bin/false --disabled-password --uid 1001 --system --gid 1001 appuser
