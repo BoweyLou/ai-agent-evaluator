@@ -85,6 +85,23 @@ const Dashboard = () => {
         </p>
       </div>
 
+      {/* API Configuration */}
+      <div className="card">
+        <div className="card-header">
+          <h2 className="text-xl font-semibold text-gray-900">
+            🔑 API Configuration
+          </h2>
+        </div>
+        <div className="card-content">
+          <p className="text-gray-600 mb-4">
+            Configure your API keys to enable AI judge evaluation and advanced features.
+          </p>
+          <Link to="/settings" className="btn-primary">
+            Configure API Keys
+          </Link>
+        </div>
+      </div>
+
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="card">

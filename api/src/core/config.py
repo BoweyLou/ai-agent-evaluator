@@ -15,11 +15,11 @@ class Settings(BaseSettings):
     # Cache
     REDIS_URL: str = "redis://localhost:6379"
     
-    # OpenRouter
+    # OpenRouter (Optional - can be set via API)
     OPENROUTER_API_KEY: str = ""
     DEFAULT_AI_JUDGE_MODEL: str = "claude-3-sonnet"
     
-    # GitHub
+    # GitHub (Optional - for advanced workspace management)
     GITHUB_TOKEN: str = ""
     GITHUB_REPO: str = ""
     GITHUB_BRANCH_PREFIX: str = "eval"

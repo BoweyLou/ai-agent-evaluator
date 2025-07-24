@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import TaskCreator from './pages/TaskCreator';
 import EvaluationRunner from './pages/EvaluationRunner';
 import Results from './pages/Results';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
             <Route path="/evaluation/new" element={<EvaluationRunner />} />
             <Route path="/results" element={<Results />} />
             <Route path="/results/:evaluationId" element={<Results />} />
+            <Route path="/settings" element={<Settings />} />
           </Routes>
         </main>
         <Toaster 

@@ -10,7 +10,7 @@ from ..models.schemas import (
     EvaluationCreate, EvaluationResponse, EvaluationDetailResponse,
     AgentResultResponse, EvaluationStatus, AgentStatus
 )
-from ..services.github import GitHubService
+from ..services.github import get_github_service
 from ..services.evaluation import EvaluationService
 from ..core.config import settings
 
@@ -223,7 +223,7 @@ async def reset_evaluation(
 async def prepare_evaluation_workspace(eval_id: str, task_id: str, agents: List[str]):
     """Prepare GitHub workspace for evaluation"""
     try:
-        github_service = GitHubService()
+        github_service = get_github_service()
         await github_service.prepare_evaluation_branches(eval_id, task_id, agents)
         
         # Update evaluation status
@@ -237,8 +237,11 @@ async def prepare_evaluation_workspace(eval_id: str, task_id: str, agents: List[
 async def evaluate_agent_solution(eval_id: str, agent_name: str):
     """Evaluate an agent's solution"""
     try:
+        from ..routers.settings import get_openrouter_key
+        
         evaluation_service = EvaluationService()
-        result = await evaluation_service.evaluate_agent(eval_id, agent_name)
+        openrouter_key = get_openrouter_key()
+        result = await evaluation_service.evaluate_agent(eval_id, agent_name, openrouter_key)
         
         print(f"Evaluation completed for {agent_name}: {result}")
         
@@ -249,7 +252,7 @@ async def evaluate_agent_solution(eval_id: str, agent_name: str):
 async def reset_evaluation_workspace(eval_id: str, task_id: str, agents: List[str]):
     """Reset evaluation workspace"""
     try:
-        github_service = GitHubService()
+        github_service = get_github_service()
         await github_service.reset_evaluation_branches(eval_id, agents)
         
         print(f"Workspace reset for evaluation {eval_id}")

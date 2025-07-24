@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 import os
 from contextlib import asynccontextmanager
 
-from .routers import tasks, evaluations, agents, results
+from .routers import tasks, evaluations, agents, results, settings as settings_router
 from .models.database import init_db
 from .core.config import settings
 
@@ -46,6 +46,7 @@ app.include_router(tasks.router, prefix="/api/v1")
 app.include_router(evaluations.router, prefix="/api/v1")
 app.include_router(agents.router, prefix="/api/v1")
 app.include_router(results.router, prefix="/api/v1")
+app.include_router(settings_router.router, prefix="/api/v1")
 
 
 @app.get("/")

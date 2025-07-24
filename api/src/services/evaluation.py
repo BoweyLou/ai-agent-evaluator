@@ -13,7 +13,7 @@ from sqlalchemy import select, update
 from ..models.database import AsyncSessionLocal, Evaluation, AgentResult, Task
 from ..core.evaluators.css_evaluator import EnhancedCSSEvaluator
 from ..services.openrouter import OpenRouterJudge
-from ..services.github import GitHubService, MockGitHubService
+from ..services.github import get_github_service
 from ..core.config import settings
 
 
@@ -26,21 +26,13 @@ class EvaluationService:
             "rule_based": EnhancedCSSEvaluator(),  # Alias for CSS evaluator
         }
         
-        # Use mock GitHub service if no token provided
-        if settings.GITHUB_TOKEN:
-            self.github_service = GitHubService()
-        else:
-            self.github_service = MockGitHubService()
+        # Use the GitHub service factory (handles optional configuration)
+        self.github_service = get_github_service()
         
-        # Initialize OpenRouter if API key provided
+        # OpenRouter will be initialized per-request with frontend API key
         self.openrouter_judge = None
-        if settings.OPENROUTER_API_KEY:
-            try:
-                self.openrouter_judge = OpenRouterJudge()
-            except Exception as e:
-                print(f"Warning: Failed to initialize OpenRouter: {e}")
     
-    async def evaluate_agent(self, evaluation_id: str, agent_name: str) -> Dict[str, Any]:
+    async def evaluate_agent(self, evaluation_id: str, agent_name: str, openrouter_key: Optional[str] = None) -> Dict[str, Any]:
         """Evaluate a single agent's solution"""
         
         async with AsyncSessionLocal() as db:
@@ -67,9 +59,17 @@ class EvaluationService:
             # Run evaluation based on task configuration
             evaluation_type = task_config.get("evaluation", {}).get("type", "rule_based")
             
-            if evaluation_type == "ai_judge" and self.openrouter_judge:
+            # Initialize OpenRouter judge if key provided
+            openrouter_judge = None
+            if openrouter_key:
+                try:
+                    openrouter_judge = OpenRouterJudge(openrouter_key)
+                except Exception as e:
+                    print(f"Warning: Failed to initialize OpenRouter: {e}")
+            
+            if evaluation_type == "ai_judge" and openrouter_judge:
                 result = await self._run_ai_judge_evaluation(
-                    task_config, baseline_files, solution_files, agent_name
+                    task_config, baseline_files, solution_files, agent_name, openrouter_judge
                 )
             elif evaluation_type == "hybrid":
                 # Run both rule-based and AI judge, then combine
@@ -77,9 +77,9 @@ class EvaluationService:
                     task_config, baseline_files, solution_files, agent_name
                 )
                 
-                if self.openrouter_judge:
+                if openrouter_judge:
                     ai_result = await self._run_ai_judge_evaluation(
-                        task_config, baseline_files, solution_files, agent_name
+                        task_config, baseline_files, solution_files, agent_name, openrouter_judge
                     )
                     result = self._combine_evaluations(rule_result, ai_result)
                 else:
@@ -161,14 +161,12 @@ class EvaluationService:
         task_config: Dict[str, Any], 
         baseline_files: Dict[str, str], 
         solution_files: Dict[str, str], 
-        agent_name: str
+        agent_name: str,
+        openrouter_judge: OpenRouterJudge
     ) -> Dict[str, Any]:
         """Run AI judge evaluation"""
         
-        if not self.openrouter_judge:
-            raise ValueError("OpenRouter judge not configured")
-        
-        result = await self.openrouter_judge.evaluate_solution(
+        result = await openrouter_judge.evaluate_solution(
             task_config, baseline_files, solution_files, agent_name
         )
         

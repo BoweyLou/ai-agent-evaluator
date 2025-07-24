@@ -10,12 +10,13 @@ class GitHubService:
     """GitHub integration for managing evaluation branches"""
     
     def __init__(self):
-        self.token = settings.GITHUB_TOKEN
-        self.repo = settings.GITHUB_REPO
+        self.token = getattr(settings, 'GITHUB_TOKEN', None)
+        self.repo = getattr(settings, 'GITHUB_REPO', None)
         self.base_url = "https://api.github.com"
+        self.enabled = bool(self.token and self.repo)
         
-        if not self.token or not self.repo:
-            raise ValueError("GitHub token and repository must be configured")
+        if not self.enabled:
+            print("Warning: GitHub integration disabled - GITHUB_TOKEN or GITHUB_REPO not configured")
     
     async def prepare_evaluation_branches(self, eval_id: str, task_id: str, agents: List[str]):
         """Create GitHub branches for each agent in an evaluation"""
@@ -247,3 +248,15 @@ class MockGitHubService(GitHubService):
     
     async def reset_evaluation_branches(self, eval_id: str, agents: List[str]):
         print(f"Mock: Reset branches for {eval_id}")
+
+
+def get_github_service() -> GitHubService:
+    """Get GitHub service - returns mock if not configured"""
+    try:
+        service = GitHubService()
+        if service.enabled:
+            return service
+        else:
+            return MockGitHubService()
+    except Exception:
+        return MockGitHubService()
