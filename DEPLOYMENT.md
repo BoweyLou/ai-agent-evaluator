@@ -42,7 +42,7 @@ If you see "no available server" errors:
 ### Port Configuration
 
 Default ports (can be changed via environment variables):
-- API: 8081
+- API: 8082
 - Web: 3001
 - Database: 5433
 - Redis: 6381

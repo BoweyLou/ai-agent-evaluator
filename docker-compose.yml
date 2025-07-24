@@ -4,7 +4,7 @@ services:
   api:
     build: ./api
     ports:
-      - "${API_PORT:-8081}:8000"
+      - "${API_PORT:-8082}:8000"
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - DATABASE_URL=${DATABASE_URL}
@@ -48,7 +48,7 @@ services:
     ports:
       - "${WEB_PORT:-3001}:3000"
     environment:
-      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8081}
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8082}
     volumes:
       - ./web:/app
       - /app/node_modules
