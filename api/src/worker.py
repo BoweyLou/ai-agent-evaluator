@@ -25,5 +25,8 @@ celery_app.conf.update(
     task_soft_time_limit=settings.MAX_EVALUATION_TIME - 60,
 )
 
+# Export celery app for the worker command
+app = celery_app
+
 # Import tasks to register them
-from .services.evaluation import run_evaluation_task  # noqa
+from . import tasks  # noqa

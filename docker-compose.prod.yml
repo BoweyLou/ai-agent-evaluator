@@ -33,7 +33,7 @@ services:
     depends_on:
       - db
       - redis
-    command: celery -A src.worker worker --loglevel=info
+    command: celery -A src.worker:celery_app worker --loglevel=info
     restart: unless-stopped
 
   web:
