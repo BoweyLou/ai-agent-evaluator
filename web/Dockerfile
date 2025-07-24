@@ -37,5 +37,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Expose port
 EXPOSE 3000
 
-# Start app with serve in production, or dev server in development
-CMD ["sh", "-c", "if [ \"$NODE_ENV\" = \"production\" ]; then serve -s build -l 3000; else npm start; fi"]
+# Start app with serve for production
+CMD ["serve", "-s", "build", "-l", "3000"]

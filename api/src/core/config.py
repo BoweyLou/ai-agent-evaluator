@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
-from typing import List
+from typing import List, Union
+from pydantic import field_validator
 import os
 
 
@@ -26,7 +27,15 @@ class Settings(BaseSettings):
     
     # Security
     JWT_SECRET: str = "jwt-secret-key"
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
+    ALLOWED_ORIGINS: Union[List[str], str] = ["http://localhost:3000", "http://localhost:8000"]
+    
+    @field_validator('ALLOWED_ORIGINS', mode='before')
+    @classmethod
+    def parse_allowed_origins(cls, v):
+        if isinstance(v, str):
+            # Handle comma-separated string
+            return [origin.strip() for origin in v.split(',') if origin.strip()]
+        return v
     
     # Evaluation Settings
     MAX_EVALUATION_TIME: int = 3600  # 1 hour
